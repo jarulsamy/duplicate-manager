@@ -44,10 +44,13 @@ int main(int argc, char *argv[])
     ofstream outFile("Duplicates.txt");
     for (pair<int, deque<string>> p : found)
     {
-        outFile << p.first << " : ";
-        for (string file : p.second)
-            outFile << file << ", ";
-        outFile << endl;
+        if (p.second.size() > 1)
+        {
+            outFile << p.first << " : ";
+            for (string file : p.second)
+                outFile << file << ", ";
+            outFile << " [" << p.second.size() << "]" << endl;
+        }
     }
     outFile.close();
 

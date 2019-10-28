@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sudo apt-get install libssl-dev
+sudo apt install -y libssl-dev g++-8
