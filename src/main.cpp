@@ -4,6 +4,7 @@
 #include <string>
 #include <filesystem>
 #include <map>
+#include <fstream>
 
 #include "hash.h"
 
@@ -12,6 +13,7 @@ using std::cout;
 using std::deque;
 using std::endl;
 using std::map;
+using std::ofstream;
 using std::pair;
 using std::string;
 
@@ -39,13 +41,15 @@ int main(int argc, char *argv[])
         found[hash].push_back(file);
     }
 
+    ofstream outFile("Duplicates.txt");
     for (pair<int, deque<string>> p : found)
     {
-        cout << p.first << " : ";
+        outFile << p.first << " : ";
         for (string file : p.second)
-            cout << file << ", ";
-        cout << endl;
+            outFile << file << ", ";
+        outFile << endl;
     }
+    outFile.close();
 
     return 0;
 }
