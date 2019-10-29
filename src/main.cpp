@@ -6,9 +6,13 @@
 #include <map>
 #include <fstream>
 
+#include <boost/program_options.hpp>
 #include "hash.h"
+#include "progressbar.hpp"
 
 namespace fs = std::filesystem;
+namespace po = boost::program_options;
+
 using std::cout;
 using std::deque;
 using std::endl;
@@ -31,17 +35,22 @@ int main(int argc, char *argv[])
     map<int, deque<string>> found;
 
     // Load all the files into a binary tree.
-    load_files(argv[1], T);
+    load_files(argv[1], T, files);
     // Load all the files into a deque
-    load_files(argv[1], files);
+    ofstream outFile("Duplicates.txt");
+
+    const int limit = files.size();
+    ProgressBar progressBar(limit, 70);
 
     for (string file : files)
     {
         int hash = hashFile(file);
         found[hash].push_back(file);
+        ++progressBar;
+        progressBar.display();
     }
+    progressBar.done();
 
-    ofstream outFile("Duplicates.txt");
     for (pair<int, deque<string>> p : found)
     {
         if (p.second.size() > 1)
@@ -49,7 +58,7 @@ int main(int argc, char *argv[])
             outFile << p.first << " : ";
             for (string file : p.second)
                 outFile << file << ", ";
-            outFile << " [" << p.second.size() << "]" << endl;
+            outFile << "[" << p.second.size() << "]" << endl;
         }
     }
     outFile.close();

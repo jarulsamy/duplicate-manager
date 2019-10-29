@@ -67,19 +67,13 @@ unsigned long long int hashFile(const string &fname)
     return hasher(md5string);
 }
 
-/*
-Potentially instead of overloading
-this should be consolidated into one function
-to avoid transversing all dirs twice.
-*/
-
-void load_files(string path, Tree<unsigned long long int> &T)
+void load_files(string path, Tree<unsigned long long int> &T, deque<string> &d)
 {
     for (const auto &entry : fs::directory_iterator(path))
     {
         if (fs::is_directory(entry.path()))
         {
-            load_files(entry.path(), T);
+            load_files(entry.path(), T, d);
         }
         else if (fs::is_regular_file(entry.path()))
         {
@@ -91,48 +85,16 @@ void load_files(string path, Tree<unsigned long long int> &T)
                     if (path.find(s) == string::npos)
                     {
                         T.insert(hashFile(entry.path()));
-                        break;
+                        d.push_back(entry.path());
                     }
                 }
             }
             else
             {
                 T.insert(hashFile(entry.path()));
-            }
-        }
-    }
-
-    return;
-}
-
-void load_files(string path, deque<string> &d)
-{
-    for (const auto &entry : fs::directory_iterator(path))
-    {
-        if (fs::is_directory(entry.path()))
-        {
-            load_files(entry.path(), d);
-        }
-        else if (fs::is_regular_file(entry.path()))
-        {
-            string path = entry.path();
-            if (exclude.size() > 0)
-            {
-                for (string s : exclude)
-                {
-                    if (path.find(s) == string::npos)
-                    {
-                        d.push_back(entry.path());
-                        break;
-                    }
-                }
-            }
-            else
-            {
                 d.push_back(entry.path());
             }
         }
     }
 }
-
 #endif
