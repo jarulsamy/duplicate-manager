@@ -8,11 +8,12 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <openssl/md5.h>
+// #include <openssl/md5.h>
 
 #include "Tree.h"
-#include "exclude.h"
+// #include "exclude.h"
 #include "xxhash64.h"
+#include "progressbar.hpp"
 
 namespace fs = std::filesystem;
 using std::cout;
@@ -42,13 +43,34 @@ u_int64_t hashFile(const string &filename)
     return result;
 }
 
-void load_files(string path, Tree<u_int64_t> &T, deque<string> &d)
+void count_files(const string path, int &num_files)
 {
     for (const auto &entry : fs::directory_iterator(path))
     {
         if (fs::is_directory(entry.path()))
         {
-            load_files(entry.path(), T, d);
+            count_files(entry.path(), num_files);
+        }
+        else if (fs::is_regular_file(entry.path()))
+        {
+            string path = entry.path();
+            if (path.find(".git") == string::npos)
+            {
+                num_files++;
+            }
+        }
+    }
+
+    return;
+}
+
+void load_files(string path, Tree<u_int64_t> &T, deque<string> &d, ProgressBar &pb)
+{
+    for (const auto &entry : fs::directory_iterator(path))
+    {
+        if (fs::is_directory(entry.path()))
+        {
+            load_files(entry.path(), T, d, pb);
         }
         else if (fs::is_regular_file(entry.path()))
         {
@@ -57,8 +79,10 @@ void load_files(string path, Tree<u_int64_t> &T, deque<string> &d)
             {
                 T.insert(hashFile(entry.path()));
                 d.push_back(entry.path());
+                ++pb;
             }
         }
+        pb.display();
     }
 }
 #endif

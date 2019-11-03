@@ -35,11 +35,15 @@ int main(int argc, char *argv[])
     map<int, deque<string>> found;
 
     // Load all the files into a binary tree.
-    load_files(argv[1], T, files);
+    int num_files = 0;
+    count_files(argv[1], num_files);
+    cout << "Number of files: " << num_files << endl;
+    ProgressBar pb(num_files, 70);
+    load_files(argv[1], T, files, pb);
+    pb.done();
+
     // Load all the files into a deque
     ofstream outFile("Duplicates.txt");
-
-    // const int limit = files.size();
 
     for (string file : files)
     {
@@ -52,9 +56,10 @@ int main(int argc, char *argv[])
         if (p.second.size() > 1)
         {
             outFile << p.first << " : ";
+            outFile << "[ " << p.second.size() << " ] ";
             for (string file : p.second)
                 outFile << file << ", ";
-            outFile << "[ " << p.second.size() << " ]" << endl;
+            outFile << endl;
         }
     }
     outFile.close();
