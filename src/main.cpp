@@ -8,7 +8,7 @@
 
 #include <boost/program_options.hpp>
 #include "hash.h"
-#include "progressbar.hpp"
+// #include "progressbar.hpp"
 
 namespace fs = std::filesystem;
 namespace po = boost::program_options;
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Tree<unsigned long long int> T;
+    Tree<u_int64_t> T;
     deque<string> files;
     // Associate hash with number of occurences
     map<int, deque<string>> found;
@@ -39,17 +39,13 @@ int main(int argc, char *argv[])
     // Load all the files into a deque
     ofstream outFile("Duplicates.txt");
 
-    const int limit = files.size();
-    ProgressBar progressBar(limit, 70);
+    // const int limit = files.size();
 
     for (string file : files)
     {
         int hash = hashFile(file);
         found[hash].push_back(file);
-        ++progressBar;
-        progressBar.display();
     }
-    progressBar.done();
 
     for (pair<int, deque<string>> p : found)
     {
@@ -58,7 +54,7 @@ int main(int argc, char *argv[])
             outFile << p.first << " : ";
             for (string file : p.second)
                 outFile << file << ", ";
-            outFile << "[" << p.second.size() << "]" << endl;
+            outFile << "[ " << p.second.size() << " ]" << endl;
         }
     }
     outFile.close();

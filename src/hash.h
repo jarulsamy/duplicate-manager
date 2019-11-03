@@ -12,6 +12,7 @@
 
 #include "Tree.h"
 #include "exclude.h"
+#include "xxhash64.h"
 
 namespace fs = std::filesystem;
 using std::cout;
@@ -23,51 +24,25 @@ using std::string;
 
 #define BUFFSIZE 16384
 
-deque<string> exclude = load_exclude("exclude.txt");
+// deque<string> exclude = load_exclude("exclude.txt");
 
-unsigned long long int hashFile(const string &fname)
+u_int64_t hashFile(const string &filename)
 {
+    ifstream input(filename, std::ios::binary);
+    std::deque<unsigned char> buffer(std::istreambuf_iterator<char>(input), {});
+    input.close();
 
-    hash<string> hasher;
-    char buffer[BUFFSIZE];
-    unsigned char digest[MD5_DIGEST_LENGTH];
-
-    std::stringstream ss;
-    std::string md5string;
-
-    std::ifstream ifs(fname, std::ifstream::binary);
-
-    MD5_CTX md5Context;
-
-    MD5_Init(&md5Context);
-
-    while (ifs.good())
+    u_int64_t myseed = 0;
+    XXHash64 myHash(myseed);
+    for (unsigned char c : buffer)
     {
-
-        ifs.read(buffer, BUFFSIZE);
-
-        MD5_Update(&md5Context, buffer, ifs.gcount());
+        myHash.add(&c, 1);
     }
-
-    ifs.close();
-
-    int res = MD5_Final(digest, &md5Context);
-
-    if (res == 0)  // hash failed
-        return {}; // or raise an exception
-
-    // set up stringstream format
-    ss << std::hex << std::uppercase << std::setfill('0');
-
-    for (unsigned char uc : digest)
-        ss << std::setw(2) << (int)uc;
-
-    md5string = ss.str();
-
-    return hasher(md5string);
+    u_int64_t result = myHash.hash();
+    return result;
 }
 
-void load_files(string path, Tree<unsigned long long int> &T, deque<string> &d)
+void load_files(string path, Tree<u_int64_t> &T, deque<string> &d)
 {
     for (const auto &entry : fs::directory_iterator(path))
     {
@@ -78,18 +53,7 @@ void load_files(string path, Tree<unsigned long long int> &T, deque<string> &d)
         else if (fs::is_regular_file(entry.path()))
         {
             string path = entry.path();
-            if (exclude.size() > 0)
-            {
-                for (string s : exclude)
-                {
-                    if (path.find(s) == string::npos)
-                    {
-                        T.insert(hashFile(entry.path()));
-                        d.push_back(entry.path());
-                    }
-                }
-            }
-            else
+            if (path.find(".git") == string::npos)
             {
                 T.insert(hashFile(entry.path()));
                 d.push_back(entry.path());
